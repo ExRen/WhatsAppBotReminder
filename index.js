@@ -97,19 +97,28 @@ function buildCronExpression(reminder) {
   return `${minute} ${hour} * * ${days}`;
 }
 
-// Send reminder with invisible mentions
+// Send reminder with loud format, multiple mentions and emojis
 async function sendReminder(reminder) {
   try {
     const chat = await client.getChatById(reminder.chat_id);
     const participants = chat.participants.map(p => p.id._serialized);
     
-    // Create invisible mentions
-    const mentions = participants.map(id => ({
-      id: id,
-      type: 'contact'
-    }));
+    // Create loud message with emojis and formatting
+    const loudMessage = `
+🔔━━━━━━━━━━━━━━━━━━🔔
+⚠️ *REMINDER PENTING!* ⚠️
+🔔━━━━━━━━━━━━━━━━━━🔔
 
-    await chat.sendMessage(reminder.message, {
+${reminder.message}
+
+⏰ Waktu: ${reminder.time}
+📢 PERHATIAN SEMUA!
+
+🔔━━━━━━━━━━━━━━━━━━🔔
+    `.trim();
+
+    // Send the loud reminder with mentions
+    await chat.sendMessage(loudMessage, {
       mentions: participants
     });
 
@@ -144,6 +153,11 @@ client.on('message', async (msg) => {
   // Command: !deletereminder
   if (msg.body.startsWith('!deletereminder')) {
     await handleDeleteReminder(msg, chat);
+  }
+  
+  // Command: !tagall - mention semua orang
+  if (msg.body.startsWith('!tagall')) {
+    await handleTagAll(msg, chat);
   }
 });
 
@@ -269,6 +283,46 @@ async function handleDeleteReminder(msg, chat) {
   } catch (err) {
     console.error('Error deleting reminder:', err);
     await msg.reply('❌ Gagal menghapus reminder');
+  }
+}
+
+// Tag all members manually
+async function handleTagAll(msg, chat) {
+  try {
+    // Format: !tagall [message]
+    // Example: !tagall Pengumuman penting untuk semua!
+    const text = msg.body.replace('!tagall', '').trim();
+    
+    if (!text) {
+      await msg.reply('Format: !tagall [pesan]\nContoh: !tagall Pengumuman penting untuk semua!');
+      return;
+    }
+
+    const participants = chat.participants.map(p => p.id._serialized);
+    
+    // Create announcement message with loud format
+    const announcement = `
+📢━━━━━━━━━━━━━━━━━━📢
+🔊 *PENGUMUMAN PENTING!* 🔊
+📢━━━━━━━━━━━━━━━━━━📢
+
+${text}
+
+👥 Tag: Semua member grup
+⏰ ${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+
+📢━━━━━━━━━━━━━━━━━━📢
+    `.trim();
+
+    // Send message with all mentions
+    await chat.sendMessage(announcement, {
+      mentions: participants
+    });
+
+    console.log(`Tag all executed in ${chat.id._serialized} by ${msg.author || msg.from}`);
+  } catch (err) {
+    console.error('Error in tagall:', err);
+    await msg.reply('❌ Gagal mention semua orang');
   }
 }
 
