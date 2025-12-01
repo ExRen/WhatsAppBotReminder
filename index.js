@@ -135,8 +135,8 @@ client.on('message', async (msg) => {
   // Only process commands from group admin
   if (!chat.isGroup) return;
   
-  const sender = await msg.getContact();
-  const participant = chat.participants.find(p => p.id._serialized === sender.id._serialized);
+  const senderId = msg.author || msg.from;
+  const participant = chat.participants.find(p => p.id._serialized === senderId);
   
   if (!participant?.isAdmin && !participant?.isSuperAdmin) return;
 

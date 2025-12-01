@@ -7,11 +7,15 @@
     "start": "node index.js",
     "dev": "node index.js"
   },
-  "keywords": ["whatsapp", "bot", "reminder"],
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "reminder"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "whatsapp-web.js": "^1.23.0",
+    "whatsapp-web.js": "^1.25.0",
     "qrcode-terminal": "^0.12.0",
     "@supabase/supabase-js": "^2.39.0",
     "node-cron": "^3.0.3",
