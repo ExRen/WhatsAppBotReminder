@@ -1,2 +1,3 @@
-2025/11/18-09:03:29.398 4ec Creating DB C:\Users\bimsky\Documents\KODINGAN\WhatsAppBotReminder\.wwebjs_auth\session-bot-session\Default\Local Storage\leveldb since it was missing.
-2025/11/18-09:03:29.403 4ec Reusing MANIFEST C:\Users\bimsky\Documents\KODINGAN\WhatsAppBotReminder\.wwebjs_auth\session-bot-session\Default\Local Storage\leveldb/MANIFEST-000001
+2025/12/02-09:46:06.351 30dc Reusing MANIFEST C:\Users\bimsky\Documents\KODINGAN\WhatsAppBotReminder\.wwebjs_auth\session-bot-session\Default\Local Storage\leveldb/MANIFEST-000001
+2025/12/02-09:46:06.352 30dc Recovering log #3
+2025/12/02-09:46:06.353 30dc Reusing old log C:\Users\bimsky\Documents\KODINGAN\WhatsAppBotReminder\.wwebjs_auth\session-bot-session\Default\Local Storage\leveldb/000003.log 
