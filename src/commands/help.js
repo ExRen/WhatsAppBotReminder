@@ -5,58 +5,47 @@ async function handleHelp(msg) {
 📚 *DAFTAR COMMAND BOT*
 
 ━━━━ *📌 REMINDER* ━━━━
-
-1️⃣ *!addreminder [hari] [jam] [pesan]*
-   Tambah reminder berulang
-   Contoh: !addreminder 1,2,3,4,5 09:00 Selamat pagi!
-   
-   Kode hari:
-   0 = Minggu | 1 = Senin | 2 = Selasa
-   3 = Rabu | 4 = Kamis | 5 = Jumat | 6 = Sabtu
-
-2️⃣ *!remindonce [tanggal] [jam] [pesan]*
-   Reminder sekali jalan
-   Contoh: !remindonce 2024-12-25 09:00 Selamat Natal!
-
-3️⃣ *!listreminders* - Lihat reminder aktif
-4️⃣ *!editreminder [id] [field] [value]* - Edit reminder
-5️⃣ *!pausereminder [id]* - Pause sementara
-6️⃣ *!resumereminder [id]* - Lanjutkan
-7️⃣ *!deletereminder [id]* - Hapus reminder
+▪️ *!addreminder [hari] [jam] [pesan]*
+▪️ *!remindonce [tanggal] [jam] [pesan]*
+▪️ *!listreminders* | *!editreminder* | *!deletereminder*
+▪️ *!pausereminder* | *!resumereminder*
 
 ━━━━ *📝 TEMPLATE* ━━━━
+▪️ *!savetemplate* | *!usetemplate* | *!listtemplates*
 
-▪️ *!savetemplate [nama] [pesan]* - Simpan template
-▪️ *!usetemplate [nama]* - Gunakan template
-▪️ *!listtemplates* - Lihat daftar
-▪️ *!deletetemplate [nama]* - Hapus template
-
-━━━━ *🎮 MINI GAMES* ━━━━
-
-▪️ *!tebak* - Tebak angka (1-100)
-▪️ *!tebak [angka]* - Tebak jawabannya
-▪️ *!trivia* - Quiz random
+━━━━ *🎮 GAMES* ━━━━
+▪️ *!tebak* - Tebak angka (+10 poin)
+▪️ *!trivia* - Quiz (+15 poin)
 ▪️ *!jawab [jawaban]* - Jawab trivia
-▪️ *!spin [item1, item2, ...]* - Random picker
+▪️ *!spin [a, b, c]* - Random picker
 ▪️ *!leaderboard* - Skor game
 
-━━━━ *📊 DIGEST* ━━━━
+━━━━ *🎉 FUN* ━━━━
+▪️ *!gacha* - Gacha harian
+▪️ *!profile* - Profil & achievement
+▪️ *!birthday set DD-MM* - Set ulang tahun
+▪️ *!birthday list* - Lihat daftar
 
-▪️ *!mentions* - Lihat mention terlewat
-▪️ *!digest* - Summary chat 24 jam
+━━━━ *🔧 UTILITY* ━━━━
+▪️ *!splitbill [jumlah]* - Bagi tagihan
+▪️ *!rules* - Aturan grup
+▪️ *!countdown YYYY-MM-DD [nama]* - Countdown
+▪️ *!note save [nama] [isi]* - Simpan catatan
+▪️ *!note [nama]* - Lihat catatan
+
+━━━━ *📊 DIGEST* ━━━━
+▪️ *!mentions* - Mention terlewat
+▪️ *!digest* - Summary 24 jam
 
 ━━━━ *📢 LAINNYA* ━━━━
+▪️ *!tagall* | *!stats* | *!help* | *!debug*
 
-▪️ *!tagall [pesan]* - Mention semua member
-▪️ *!stats* - Statistik reminder
-▪️ *!help* - Bantuan ini
-▪️ *!debug* - Info debugging
-
-⚠️ *Catatan:* Hanya admin grup yang bisa menggunakan command
+_Total: 28+ commands_
   `.trim();
 
   await msg.reply(helpText);
 }
 
 module.exports = handleHelp;
+
 

@@ -508,6 +508,350 @@ async function getChatDigest(chatId, hours = 24) {
   }
 }
 
+// ================== FUN FUNCTIONS ==================
+
+/**
+ * Check gacha cooldown (once per day)
+ */
+async function checkGachaCooldown(chatId, playerId) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const { data, error } = await supabase
+      .from('gacha_history')
+      .select('*')
+      .eq('chat_id', chatId)
+      .eq('player_id', playerId)
+      .gte('created_at', today)
+      .limit(1);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      return { allowed: false, nextRollTime: tomorrow.toISOString() };
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    console.error('❌ Error checking gacha cooldown:', err);
+    return { allowed: true }; // Allow on error
+  }
+}
+
+/**
+ * Save gacha result
+ */
+async function saveGachaResult(chatId, playerId, playerName, item) {
+  try {
+    const { error } = await supabase
+      .from('gacha_history')
+      .insert({
+        chat_id: chatId,
+        player_id: playerId,
+        player_name: playerName,
+        item_name: item.name,
+        item_rarity: item.rarity,
+        points_earned: item.points,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error saving gacha result:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Get user stats for profile
+ */
+async function getUserStats(chatId, playerId) {
+  try {
+    // Get leaderboard stats
+    const { data: leaderboard } = await supabase
+      .from('leaderboard')
+      .select('*')
+      .eq('chat_id', chatId)
+      .eq('player_id', playerId)
+      .single();
+
+    // Get gacha stats
+    const { data: gachaHistory } = await supabase
+      .from('gacha_history')
+      .select('*')
+      .eq('chat_id', chatId)
+      .eq('player_id', playerId);
+
+    const gachaRolls = gachaHistory?.length || 0;
+    const rareItems = gachaHistory?.filter(g => 
+      g.item_rarity === 'rare' || g.item_rarity === 'legendary'
+    ).length || 0;
+
+    return {
+      totalPoints: leaderboard?.total_points || 0,
+      gamesWon: leaderboard?.games_won || 0,
+      gachaRolls,
+      rareItems
+    };
+  } catch (err) {
+    console.error('❌ Error getting user stats:', err);
+    return { totalPoints: 0, gamesWon: 0, gachaRolls: 0, rareItems: 0 };
+  }
+}
+
+/**
+ * Set user birthday
+ */
+async function setBirthday(chatId, playerId, playerName, day, month) {
+  try {
+    const { error } = await supabase
+      .from('birthdays')
+      .upsert({
+        chat_id: chatId,
+        player_id: playerId,
+        player_name: playerName,
+        birth_day: day,
+        birth_month: month,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'chat_id,player_id' });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error setting birthday:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Get today's birthdays
+ */
+async function getTodayBirthdays(chatId) {
+  try {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+
+    const { data, error } = await supabase
+      .from('birthdays')
+      .select('*')
+      .eq('chat_id', chatId)
+      .eq('birth_day', day)
+      .eq('birth_month', month);
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('❌ Error getting today birthdays:', err);
+    return [];
+  }
+}
+
+/**
+ * Get all birthdays
+ */
+async function getAllBirthdays(chatId) {
+  try {
+    const { data, error } = await supabase
+      .from('birthdays')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('birth_month', { ascending: true })
+      .order('birth_day', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('❌ Error getting all birthdays:', err);
+    return [];
+  }
+}
+
+// ================== UTILITY FUNCTIONS ==================
+
+/**
+ * Get group rules
+ */
+async function getGroupRules(chatId) {
+  try {
+    const { data, error } = await supabase
+      .from('group_rules')
+      .select('*')
+      .eq('chat_id', chatId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  } catch (err) {
+    console.error('❌ Error getting rules:', err);
+    return null;
+  }
+}
+
+/**
+ * Set group rules
+ */
+async function setGroupRules(chatId, content) {
+  try {
+    const { error } = await supabase
+      .from('group_rules')
+      .upsert({
+        chat_id: chatId,
+        content: content,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'chat_id' });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error setting rules:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Delete group rules
+ */
+async function deleteGroupRules(chatId) {
+  try {
+    const { error } = await supabase
+      .from('group_rules')
+      .delete()
+      .eq('chat_id', chatId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error deleting rules:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Get active countdowns
+ */
+async function getActiveCountdowns(chatId) {
+  try {
+    const { data, error } = await supabase
+      .from('countdowns')
+      .select('*')
+      .eq('chat_id', chatId)
+      .gte('target_date', new Date().toISOString())
+      .order('target_date', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('❌ Error getting countdowns:', err);
+    return [];
+  }
+}
+
+/**
+ * Create countdown
+ */
+async function createCountdown(countdownData) {
+  try {
+    const { error } = await supabase
+      .from('countdowns')
+      .insert({
+        ...countdownData,
+        created_at: new Date().toISOString()
+      });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error creating countdown:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Get notes list
+ */
+async function getNotes(chatId) {
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('name, updated_at')
+      .eq('chat_id', chatId)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('❌ Error getting notes:', err);
+    return [];
+  }
+}
+
+/**
+ * Get single note
+ */
+async function getNote(chatId, name) {
+  try {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('chat_id', chatId)
+      .eq('name', name)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  } catch (err) {
+    console.error('❌ Error getting note:', err);
+    return null;
+  }
+}
+
+/**
+ * Save note
+ */
+async function saveNote(chatId, name, content, createdBy) {
+  try {
+    const { error } = await supabase
+      .from('notes')
+      .upsert({
+        chat_id: chatId,
+        name: name,
+        content: content,
+        created_by: createdBy,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'chat_id,name' });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error saving note:', err);
+    return { success: false };
+  }
+}
+
+/**
+ * Delete note
+ */
+async function deleteNote(chatId, name) {
+  try {
+    const { error } = await supabase
+      .from('notes')
+      .delete()
+      .eq('chat_id', chatId)
+      .eq('name', name);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error deleting note:', err);
+    return { success: false };
+  }
+}
+
 module.exports = {
   supabase,
   saveSession,
@@ -532,5 +876,22 @@ module.exports = {
   markMentionsRead,
   // Digest functions
   trackChatMessage,
-  getChatDigest
+  getChatDigest,
+  // Fun functions
+  checkGachaCooldown,
+  saveGachaResult,
+  getUserStats,
+  setBirthday,
+  getTodayBirthdays,
+  getAllBirthdays,
+  // Utility functions
+  getGroupRules,
+  setGroupRules,
+  deleteGroupRules,
+  getActiveCountdowns,
+  createCountdown,
+  getNotes,
+  getNote,
+  saveNote,
+  deleteNote
 };

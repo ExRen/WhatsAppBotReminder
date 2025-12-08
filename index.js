@@ -36,7 +36,16 @@ const {
   handleMentions,
   handleDigest,
   trackMention,
-  trackMessage
+  trackMessage,
+  // Fun
+  handleGacha,
+  handleProfile,
+  handleBirthday,
+  // Utility
+  handleSplitBill,
+  handleRules,
+  handleCountdown,
+  handleNote
 } = require('./src/commands');
 
 // Initialize rate limiter (3 seconds cooldown)
@@ -320,6 +329,43 @@ ${chat.participants.length > 10 ? `\n... dan ${chat.participants.length - 10} la
       case '!digest':
         console.log('📊 Executing digest...');
         await handleDigest(msg, chat);
+        break;
+
+      // Fun
+      case '!gacha':
+        console.log('🎰 Executing gacha...');
+        await handleGacha(msg, chat);
+        break;
+
+      case '!profile':
+        console.log('👤 Executing profile...');
+        await handleProfile(msg, chat);
+        break;
+
+      case '!birthday':
+        console.log('🎂 Executing birthday...');
+        await handleBirthday(msg, chat);
+        break;
+
+      // Utility
+      case '!splitbill':
+        console.log('💰 Executing splitbill...');
+        await handleSplitBill(msg, chat);
+        break;
+
+      case '!rules':
+        console.log('📜 Executing rules...');
+        await handleRules(msg, chat);
+        break;
+
+      case '!countdown':
+        console.log('⏰ Executing countdown...');
+        await handleCountdown(msg, chat);
+        break;
+
+      case '!note':
+        console.log('📝 Executing note...');
+        await handleNote(msg, chat);
         break;
 
       default:
