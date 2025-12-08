@@ -1,24 +1,30 @@
 {
   "name": "whatsappbotreminder",
-  "version": "1.0.0",
-  "description": "WhatsApp Bot with Reminder Feature",
+  "version": "2.0.0",
+  "description": "WhatsApp Bot with Reminder, Templates, and Scheduling Features",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node index.js"
+    "dev": "nodemon index.js"
   },
   "keywords": [
     "whatsapp",
     "bot",
-    "reminder"
+    "reminder",
+    "scheduler",
+    "templates"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "whatsapp-web.js": "^1.25.0",
-    "qrcode-terminal": "^0.12.0",
     "@supabase/supabase-js": "^2.39.0",
+    "dayjs": "^1.11.10",
+    "dotenv": "^16.3.1",
     "node-cron": "^3.0.3",
-    "dotenv": "^16.3.1"
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.25.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }
