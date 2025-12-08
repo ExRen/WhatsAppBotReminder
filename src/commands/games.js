@@ -9,8 +9,8 @@ async function handleTebak(msg, chat) {
   try {
     const parts = msg.body.split(' ');
     const playerId = msg.author || msg.from;
-    const contact = await msg.getContact();
-    const playerName = contact.pushname || contact.name || playerId.split('@')[0];
+    // Safe player name extraction without getContact
+    const playerName = playerId.split('@')[0].replace(/[^0-9]/g, '') || 'Player';
 
     // If just "!tebak", start new game
     if (parts.length === 1) {
@@ -167,8 +167,8 @@ async function handleJawab(msg, chat) {
     }
 
     const playerId = msg.author || msg.from;
-    const contact = await msg.getContact();
-    const playerName = contact.pushname || contact.name || playerId.split('@')[0];
+    // Safe player name extraction without getContact
+    const playerName = playerId.split('@')[0].replace(/[^0-9]/g, '') || 'Player';
 
     const result = gameState.answerTrivia(chat.id._serialized, playerId, playerName, answer);
 
@@ -229,14 +229,8 @@ async function handleSpin(msg, chat) {
       const result = gameState.spin(participants);
       const selectedId = result.selected.id._serialized;
       
-      // Get contact info
-      let selectedName = selectedId.split('@')[0];
-      try {
-        const contact = await chat.client?.getContactById(selectedId);
-        if (contact) {
-          selectedName = contact.pushname || contact.name || selectedName;
-        }
-      } catch (e) {}
+      // Get contact name safely
+      let selectedName = selectedId.split('@')[0].replace(/[^0-9]/g, '') || 'Member';
 
       await chat.sendMessage(`
 🎰 *SPIN THE WHEEL!*

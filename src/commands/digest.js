@@ -107,8 +107,8 @@ async function trackMention(msg, chat) {
     if (!msg.mentionedIds || msg.mentionedIds.length === 0) return;
 
     const senderId = msg.author || msg.from;
-    const contact = await msg.getContact();
-    const senderName = contact?.pushname || contact?.name || senderId.split('@')[0];
+    // Safe sender name extraction without getContact
+    const senderName = senderId.split('@')[0].replace(/[^0-9]/g, '') || 'User';
 
     // Save each mention
     for (const mentionedId of msg.mentionedIds) {
@@ -135,8 +135,8 @@ async function trackMention(msg, chat) {
 async function trackMessage(msg, chat) {
   try {
     const senderId = msg.author || msg.from;
-    const contact = await msg.getContact();
-    const senderName = contact?.pushname || contact?.name || senderId.split('@')[0];
+    // Safe sender name extraction without getContact
+    const senderName = senderId.split('@')[0].replace(/[^0-9]/g, '') || 'User';
 
     await db.trackChatMessage({
       chat_id: chat.id._serialized,
