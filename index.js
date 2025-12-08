@@ -25,7 +25,18 @@ const {
   handleUseTemplate,
   handleListTemplates,
   handleDeleteTemplate,
-  handleStats
+  handleStats,
+  // Games
+  handleTebak,
+  handleTrivia,
+  handleJawab,
+  handleSpin,
+  handleLeaderboard,
+  // Digest
+  handleMentions,
+  handleDigest,
+  trackMention,
+  trackMessage
 } = require('./src/commands');
 
 // Initialize rate limiter (3 seconds cooldown)
@@ -274,9 +285,52 @@ ${chat.participants.length > 10 ? `\n... dan ${chat.participants.length - 10} la
         await msg.reply(debugInfo);
         break;
 
+      // Games
+      case '!tebak':
+        console.log('🎲 Executing tebak...');
+        await handleTebak(msg, chat);
+        break;
+
+      case '!trivia':
+        console.log('🧠 Executing trivia...');
+        await handleTrivia(msg, chat);
+        break;
+
+      case '!jawab':
+        console.log('💬 Executing jawab...');
+        await handleJawab(msg, chat);
+        break;
+
+      case '!spin':
+        console.log('🎰 Executing spin...');
+        await handleSpin(msg, chat);
+        break;
+
+      case '!leaderboard':
+        console.log('🏆 Executing leaderboard...');
+        await handleLeaderboard(msg, chat);
+        break;
+
+      // Digest
+      case '!mentions':
+        console.log('📢 Executing mentions...');
+        await handleMentions(msg, chat);
+        break;
+
+      case '!digest':
+        console.log('📊 Executing digest...');
+        await handleDigest(msg, chat);
+        break;
+
       default:
         // Unknown command - do nothing
         break;
+    }
+
+    // Track mentions and messages for digest (non-blocking)
+    if (chat.isGroup) {
+      trackMention(msg, chat).catch(() => {});
+      trackMessage(msg, chat).catch(() => {});
     }
   } catch (err) {
     console.error('❌ Error handling message:', err);

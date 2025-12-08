@@ -11,6 +11,8 @@ const handleDeleteReminder = require('./deleteReminder');
 const handleTagAll = require('./tagAll');
 const { handleSaveTemplate, handleUseTemplate, handleListTemplates, handleDeleteTemplate } = require('./templates');
 const handleStats = require('./stats');
+const { handleTebak, handleTrivia, handleJawab, handleSpin, handleLeaderboard } = require('./games');
+const { handleMentions, handleDigest, trackMention, trackMessage } = require('./digest');
 
 module.exports = {
   handleHelp,
@@ -26,5 +28,16 @@ module.exports = {
   handleUseTemplate,
   handleListTemplates,
   handleDeleteTemplate,
-  handleStats
+  handleStats,
+  // Games
+  handleTebak,
+  handleTrivia,
+  handleJawab,
+  handleSpin,
+  handleLeaderboard,
+  // Digest
+  handleMentions,
+  handleDigest,
+  trackMention,
+  trackMessage
 };

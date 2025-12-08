@@ -18,43 +18,38 @@ async function handleHelp(msg) {
    Reminder sekali jalan
    Contoh: !remindonce 2024-12-25 09:00 Selamat Natal!
 
-3️⃣ *!listreminders*
-   Lihat semua reminder aktif
-
-4️⃣ *!editreminder [id] [field] [value]*
-   Edit reminder
-   Field: time, message, days
-   Contoh: !editreminder 5 time 10:30
-
-5️⃣ *!pausereminder [id]*
-   Pause reminder sementara
-
-6️⃣ *!resumereminder [id]*
-   Lanjutkan reminder yang dipause
-
-7️⃣ *!deletereminder [id]*
-   Hapus reminder
+3️⃣ *!listreminders* - Lihat reminder aktif
+4️⃣ *!editreminder [id] [field] [value]* - Edit reminder
+5️⃣ *!pausereminder [id]* - Pause sementara
+6️⃣ *!resumereminder [id]* - Lanjutkan
+7️⃣ *!deletereminder [id]* - Hapus reminder
 
 ━━━━ *📝 TEMPLATE* ━━━━
 
-8️⃣ *!savetemplate [nama] [pesan]*
-   Simpan template pesan
-   Contoh: !savetemplate pagi Selamat pagi semuanya!
+▪️ *!savetemplate [nama] [pesan]* - Simpan template
+▪️ *!usetemplate [nama]* - Gunakan template
+▪️ *!listtemplates* - Lihat daftar
+▪️ *!deletetemplate [nama]* - Hapus template
 
-9️⃣ *!usetemplate [nama]*
-   Gunakan template tersimpan
+━━━━ *🎮 MINI GAMES* ━━━━
 
-🔟 *!listtemplates*
-   Lihat daftar template
+▪️ *!tebak* - Tebak angka (1-100)
+▪️ *!tebak [angka]* - Tebak jawabannya
+▪️ *!trivia* - Quiz random
+▪️ *!jawab [jawaban]* - Jawab trivia
+▪️ *!spin [item1, item2, ...]* - Random picker
+▪️ *!leaderboard* - Skor game
 
-1️⃣1️⃣ *!deletetemplate [nama]*
-   Hapus template
+━━━━ *📊 DIGEST* ━━━━
+
+▪️ *!mentions* - Lihat mention terlewat
+▪️ *!digest* - Summary chat 24 jam
 
 ━━━━ *📢 LAINNYA* ━━━━
 
 ▪️ *!tagall [pesan]* - Mention semua member
-▪️ *!stats* - Lihat statistik reminder
-▪️ *!help* - Tampilkan bantuan ini
+▪️ *!stats* - Statistik reminder
+▪️ *!help* - Bantuan ini
 ▪️ *!debug* - Info debugging
 
 ⚠️ *Catatan:* Hanya admin grup yang bisa menggunakan command
@@ -64,3 +59,4 @@ async function handleHelp(msg) {
 }
 
 module.exports = handleHelp;
+
