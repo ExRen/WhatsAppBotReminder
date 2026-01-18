@@ -2,6 +2,7 @@
 const cron = require('node-cron');
 const { buildCronExpression, formatDateTime } = require('../utils/helpers');
 const db = require('./database');
+const clientManager = require('../utils/clientManager');
 
 // Store active cron jobs
 const activeCrons = new Map();
@@ -60,6 +61,17 @@ function scheduleOneTimeReminder(reminder, client) {
  */
 async function sendReminder(reminder, client) {
   try {
+    // Check if client is ready first
+    if (!clientManager.isClientReady()) {
+      console.log(`⏳ Client not ready, waiting before sending reminder ${reminder.id}...`);
+      try {
+        await clientManager.waitForReady(15000); // Wait up to 15 seconds
+      } catch (err) {
+        console.error(`❌ Client not ready for reminder ${reminder.id}, will retry on next schedule`);
+        return;
+      }
+    }
+
     // Check if reminder is still active
     const isActive = await db.isReminderActive(reminder.id);
     if (!isActive) {
@@ -74,13 +86,16 @@ async function sendReminder(reminder, client) {
       return;
     }
 
-    // Get chat
+    // Get chat using safe method
     let chat;
     try {
-      chat = await client.getChatById(reminder.chat_id);
+      chat = await clientManager.safeGetChat(reminder.chat_id);
     } catch (chatErr) {
-      console.error(`❌ Chat ${reminder.chat_id} not found, deactivating reminder`);
-      await db.updateReminder(reminder.id, { active: false });
+      console.error(`❌ Failed to get chat ${reminder.chat_id}:`, chatErr.message);
+      // Only deactivate if it's a "not found" error, not a context error
+      if (chatErr.message?.includes('not found') || chatErr.message?.includes('invalid')) {
+        await db.updateReminder(reminder.id, { active: false });
+      }
       return;
     }
 
@@ -111,14 +126,15 @@ ${reminder.message}
 🔔━━━━━━━━━━━━━━━━━━🔔
     `.trim();
 
-    // Send the reminder with mentions
-    await chat.sendMessage(reminderMessage, {
+    // Send the reminder with safe method
+    await clientManager.safeSendMessage(chat, reminderMessage, {
       mentions: participants
     });
 
     console.log(`✅ Reminder sent to ${reminder.chat_id}`);
   } catch (err) {
-    console.error('❌ Error sending reminder:', err);
+    console.error(`❌ Error sending reminder ${reminder.id}:`, err.message);
+    // Don't throw - let the scheduler continue for next reminder
   }
 }
 

@@ -9,6 +9,7 @@ const scheduler = require('./src/services/scheduler');
 
 // Import utilities
 const RateLimiter = require('./src/utils/rateLimiter');
+const clientManager = require('./src/utils/clientManager');
 
 // Import command handlers
 const {
@@ -76,6 +77,7 @@ const client = new Client({
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
+let healthCheckInterval = null;
 
 // ================== EVENT HANDLERS ==================
 
@@ -93,12 +95,38 @@ client.on('ready', async () => {
   console.log('✅ Bot siap digunakan!');
   console.log('📱 Koneksi WhatsApp berhasil');
   reconnectAttempts = 0; // Reset on successful connection
+  
+  // Mark client as ready in clientManager
+  clientManager.setClient(client);
+  clientManager.setReady(true);
 
   // Add delay before database operations
   setTimeout(async () => {
-    await db.saveSession();
-    await scheduler.loadAllReminders(client);
+    try {
+      await db.saveSession();
+      await scheduler.loadAllReminders(client);
+    } catch (err) {
+      console.error('❌ Error during initialization:', err.message);
+    }
   }, 2000);
+  
+  // Start health check interval (every 5 minutes)
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+  }
+  healthCheckInterval = setInterval(async () => {
+    const health = await clientManager.healthCheck();
+    if (health.healthy) {
+      console.log('✅ Health check: Client is healthy');
+    } else {
+      console.warn(`⚠️ Health check failed: ${health.reason}`);
+      // Attempt to reinitialize if unhealthy
+      if (!clientManager.isClientReady()) {
+        console.log('🔄 Triggering reconnection due to unhealthy state...');
+        clientManager.setReady(false);
+      }
+    }
+  }, 5 * 60 * 1000); // 5 minutes
 });
 
 // Authentication failure
@@ -109,16 +137,51 @@ client.on('auth_failure', (msg) => {
 // Disconnected - with auto-reconnect
 client.on('disconnected', async (reason) => {
   console.log('⚠️ Bot terputus:', reason);
+  
+  // Mark client as not ready immediately
+  clientManager.setReady(false);
+  
+  // Clear health check interval
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+  }
 
   if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
     reconnectAttempts++;
-    console.log(`🔄 Mencoba reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+    const delay = RECONNECT_DELAY * Math.pow(1.5, reconnectAttempts - 1); // Exponential backoff
+    console.log(`🔄 Mencoba reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) dalam ${delay/1000}s...`);
 
-    setTimeout(() => {
-      client.initialize();
-    }, RECONNECT_DELAY);
+    setTimeout(async () => {
+      try {
+        await client.initialize();
+      } catch (err) {
+        console.error('❌ Reconnect failed:', err.message);
+      }
+    }, delay);
   } else {
     console.error('❌ Maksimum reconnect attempts tercapai. Silakan restart bot manual.');
+  }
+});
+
+// Client state change (important for tracking Puppeteer issues)
+client.on('change_state', (state) => {
+  console.log(`📊 Client state changed: ${state}`);
+  
+  if (state === 'CONNECTED') {
+    clientManager.setReady(true);
+  } else if (state === 'UNPAIRED' || state === 'UNLAUNCHED') {
+    clientManager.setReady(false);
+  }
+});
+
+// Loading screen (WhatsApp Web is refreshing)
+client.on('loading_screen', (percent, message) => {
+  console.log(`⏳ Loading: ${percent}% - ${message}`);
+  
+  // Mark as not ready during loading
+  if (percent < 100) {
+    clientManager.setReady(false);
   }
 });
 
