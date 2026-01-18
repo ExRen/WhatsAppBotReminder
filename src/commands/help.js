@@ -1,4 +1,5 @@
 // src/commands/help.js
+const clientManager = require('../utils/clientManager');
 
 async function handleHelp(msg) {
   const helpText = `
@@ -43,9 +44,7 @@ async function handleHelp(msg) {
 _Total: 28+ commands_
   `.trim();
 
-  await msg.reply(helpText);
+  await clientManager.safeReply(msg, helpText);
 }
 
 module.exports = handleHelp;
-
-

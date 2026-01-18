@@ -1,6 +1,7 @@
 // src/commands/stats.js
 const db = require('../services/database');
 const scheduler = require('../services/scheduler');
+const clientManager = require('../utils/clientManager');
 
 async function handleStats(msg, chat) {
   try {
@@ -25,10 +26,10 @@ async function handleStats(msg, chat) {
 ━━━━━━━━━━━━━━━━━
     `.trim();
 
-    await msg.reply(statsMessage);
+    await clientManager.safeReply(msg, statsMessage);
   } catch (err) {
     console.error('Error fetching stats:', err);
-    await msg.reply('❌ Gagal mengambil statistik');
+    await clientManager.safeReply(msg, '❌ Gagal mengambil statistik');
   }
 }
 

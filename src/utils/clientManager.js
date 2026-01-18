@@ -106,6 +106,69 @@ class ClientManager {
   }
 
   /**
+   * Safe reply with retry logic
+   * Drop-in replacement for msg.reply()
+   */
+  async safeReply(msg, content, options = {}) {
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      try {
+        // Check if client is ready before sending
+        if (!this.isClientReady()) {
+          console.log(`⏳ Waiting for client (reply attempt ${attempt}/${this.retryAttempts})...`);
+          await this.waitForReady(5000);
+        }
+
+        // Attempt to reply
+        const result = await msg.reply(content, undefined, options);
+        return result;
+      } catch (err) {
+        lastError = err;
+        const errorMessage = err.message || '';
+
+        // Check for known Puppeteer/context errors
+        if (this.isRecoverableError(errorMessage)) {
+          console.log(`⚠️ Reply context error on attempt ${attempt}/${this.retryAttempts}: ${errorMessage.substring(0, 100)}`);
+
+          // Mark client as not ready to trigger reconnect if needed
+          if (attempt >= 2) {
+            this.setReady(false);
+          }
+
+          // Wait before retry with exponential backoff
+          const delay = this.retryDelay * Math.pow(2, attempt - 1);
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await this.sleep(delay);
+        } else {
+          // Non-recoverable error, throw immediately
+          throw err;
+        }
+      }
+    }
+
+    // All retries exhausted - just log, don't throw to avoid crashing
+    console.error(`❌ Failed to reply after ${this.retryAttempts} attempts`);
+    return null;
+  }
+
+  /**
+   * Check if error is recoverable (Puppeteer context errors)
+   */
+  isRecoverableError(errorMessage) {
+    const recoverablePatterns = [
+      'Execution context was destroyed',
+      'Protocol error',
+      'Target closed',
+      'Session closed',
+      'Navigation',
+      'markedUnread',
+      'Cannot read properties of undefined'
+    ];
+    return recoverablePatterns.some(pattern => errorMessage.includes(pattern));
+  }
+
+  /**
    * Safe get chat with retry
    */
   async safeGetChat(chatId) {
