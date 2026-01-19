@@ -175,14 +175,12 @@ client.on('change_state', (state) => {
   }
 });
 
-// Loading screen (WhatsApp Web is refreshing)
+// Loading screen (WhatsApp Web is refreshing) - just log, don't change state
+// The 'ready' event is the authoritative source for readiness
 client.on('loading_screen', (percent, message) => {
   console.log(`⏳ Loading: ${percent}% - ${message}`);
-  
-  // Mark as not ready during loading
-  if (percent < 100) {
-    clientManager.setReady(false);
-  }
+  // Note: We don't change ready state here because loading events
+  // can arrive out of order or after 'ready' event
 });
 
 // ================== MESSAGE HANDLER ==================

@@ -1,13 +1,14 @@
 // src/commands/listReminders.js
 const db = require('../services/database');
 const { daysToNames, formatDateTime } = require('../utils/helpers');
+const clientManager = require('../utils/clientManager');
 
 async function handleListReminders(msg, chat) {
   try {
     const reminders = await db.getChatReminders(chat.id._serialized);
 
     if (!reminders || reminders.length === 0) {
-      await msg.reply('📭 Tidak ada reminder aktif di grup ini');
+      await clientManager.safeReply(msg, '📭 Tidak ada reminder aktif di grup ini');
       return;
     }
 
@@ -35,10 +36,10 @@ async function handleListReminders(msg, chat) {
     list += '━━━━━━━━━━━━━━━━━\n';
     list += `Total: ${reminders.length} reminder`;
 
-    await msg.reply(list);
+    await clientManager.safeReply(msg, list);
   } catch (err) {
     console.error('Error listing reminders:', err);
-    await msg.reply('❌ Gagal mengambil daftar reminder');
+    await clientManager.safeReply(msg, '❌ Gagal mengambil daftar reminder');
   }
 }
 
