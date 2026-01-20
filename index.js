@@ -78,6 +78,8 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
 let healthCheckInterval = null;
+let healthCheckFailures = 0;
+const MAX_HEALTH_FAILURES = 3; // Auto-restart after 3 consecutive failures
 
 // ================== EVENT HANDLERS ==================
 
@@ -110,6 +112,9 @@ client.on('ready', async () => {
     }
   }, 2000);
   
+  // Reset health check failures on ready
+  healthCheckFailures = 0;
+  
   // Start health check interval (every 5 minutes)
   if (healthCheckInterval) {
     clearInterval(healthCheckInterval);
@@ -118,12 +123,36 @@ client.on('ready', async () => {
     const health = await clientManager.healthCheck();
     if (health.healthy) {
       console.log('✅ Health check: Client is healthy');
+      healthCheckFailures = 0; // Reset on success
     } else {
-      console.warn(`⚠️ Health check failed: ${health.reason}`);
-      // Attempt to reinitialize if unhealthy
-      if (!clientManager.isClientReady()) {
-        console.log('🔄 Triggering reconnection due to unhealthy state...');
+      healthCheckFailures++;
+      console.warn(`⚠️ Health check failed (${healthCheckFailures}/${MAX_HEALTH_FAILURES}): ${health.reason}`);
+      
+      // Auto-restart if too many consecutive failures
+      if (healthCheckFailures >= MAX_HEALTH_FAILURES) {
+        console.log('🔄 Too many health check failures, triggering auto-restart...');
+        healthCheckFailures = 0; // Reset counter
         clientManager.setReady(false);
+        
+        // Clear interval before restart
+        if (healthCheckInterval) {
+          clearInterval(healthCheckInterval);
+          healthCheckInterval = null;
+        }
+        
+        // Destroy and reinitialize client
+        try {
+          await client.destroy();
+          console.log('🗑️ Client destroyed, reinitializing...');
+          setTimeout(() => {
+            client.initialize();
+          }, 3000);
+        } catch (err) {
+          console.error('❌ Error during auto-restart:', err.message);
+          // Force restart via PM2 if destroy fails
+          console.log('⚠️ Attempting PM2 restart...');
+          process.exit(1); // PM2 will restart the process
+        }
       }
     }
   }, 5 * 60 * 1000); // 5 minutes
