@@ -54,6 +54,7 @@ const {
 const rateLimiter = new RateLimiter(3000);
 
 // Initialize WhatsApp client
+// Initialize WhatsApp client
 const client = new Client({
   authStrategy: new LocalAuth({
     clientId: 'bot-session-v3' // Fresh session for official library
@@ -67,19 +68,17 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--single-process',
-      '--disable-gpu',
-      '--disable-extensions',
-      '--aggressive-cache-discard',
-      '--disable-cache',
-      '--disable-application-cache',
-      '--disable-offline-load-stale-cache',
-      '--disk-cache-size=0'
+      '--disable-gpu'
     ]
   },
   qrMaxRetries: 10,
   authTimeoutMs: 60000,
   linkPreview: false // Disable link preview to save resources
+});
+
+// Capture unhandled rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 // Reconnection settings
@@ -98,7 +97,21 @@ client.on('qr', (qr) => {
   console.log('SCAN QR CODE INI:');
   console.log('='.repeat(50));
   qrcode.generate(qr, { small: true });
-  console.log('='.repeat(50));
+});
+
+// Loading screen progress
+client.on('loading_screen', (percent, message) => {
+  console.log(`⏳ Loading: ${percent}% - ${message}`);
+});
+
+// Authentication successful
+client.on('authenticated', () => {
+    console.log('🔐 Authentication successful!');
+});
+
+// Authentication failure
+client.on('auth_failure', (msg) => {
+  console.error('❌ Authentication failure:', msg);
 });
 
 // Bot ready
