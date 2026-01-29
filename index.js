@@ -71,7 +71,7 @@ const client = new Client({
       '--disable-gpu'
     ]
   },
-  qrMaxRetries: 5
+  qrMaxRetries: 10
 });
 
 // Reconnection settings
