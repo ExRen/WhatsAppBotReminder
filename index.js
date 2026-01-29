@@ -120,47 +120,59 @@ client.on('ready', async () => {
   // Reset health check failures on ready
   healthCheckFailures = 0;
   
-  // Start health check interval (every 5 minutes)
+  // Start health check interval AFTER a delay to let WhatsApp stabilize
+  // This prevents false positives during initial loading
   if (healthCheckInterval) {
     clearInterval(healthCheckInterval);
   }
-  healthCheckInterval = setInterval(async () => {
-    const health = await clientManager.healthCheck();
-    if (health.healthy) {
-      console.log('✅ Health check: Client is healthy');
-      healthCheckFailures = 0; // Reset on success
-    } else {
-      healthCheckFailures++;
-      console.warn(`⚠️ Health check failed (${healthCheckFailures}/${MAX_HEALTH_FAILURES}): ${health.reason}`);
+  
+  // Delay first health check by 2 minutes to allow full stabilization
+  setTimeout(() => {
+    console.log('🏥 Starting health check monitoring...');
+    healthCheckInterval = setInterval(async () => {
+      // Skip health check if client is marked as not ready (during loading/reconnect)
+      if (!clientManager.isClientReady()) {
+        console.log('⏭️ Health check skipped - client not ready');
+        return;
+      }
       
-      // Auto-restart if too many consecutive failures
-      if (healthCheckFailures >= MAX_HEALTH_FAILURES) {
-        console.log('🔄 Too many health check failures, triggering auto-restart...');
-        healthCheckFailures = 0; // Reset counter
-        clientManager.setReady(false);
+      const health = await clientManager.healthCheck();
+      if (health.healthy) {
+        console.log('✅ Health check: Client is healthy');
+        healthCheckFailures = 0; // Reset on success
+      } else {
+        healthCheckFailures++;
+        console.warn(`⚠️ Health check failed (${healthCheckFailures}/${MAX_HEALTH_FAILURES}): ${health.reason}`);
         
-        // Clear interval before restart
-        if (healthCheckInterval) {
-          clearInterval(healthCheckInterval);
-          healthCheckInterval = null;
-        }
-        
-        // Destroy and reinitialize client
-        try {
-          await client.destroy();
-          console.log('🗑️ Client destroyed, reinitializing...');
-          setTimeout(() => {
-            client.initialize();
-          }, 3000);
-        } catch (err) {
-          console.error('❌ Error during auto-restart:', err.message);
-          // Force restart via PM2 if destroy fails
-          console.log('⚠️ Attempting PM2 restart...');
-          process.exit(1); // PM2 will restart the process
+        // Auto-restart if too many consecutive failures
+        if (healthCheckFailures >= MAX_HEALTH_FAILURES) {
+          console.log('🔄 Too many health check failures, triggering auto-restart...');
+          healthCheckFailures = 0; // Reset counter
+          clientManager.setReady(false);
+          
+          // Clear interval before restart
+          if (healthCheckInterval) {
+            clearInterval(healthCheckInterval);
+            healthCheckInterval = null;
+          }
+          
+          // Destroy and reinitialize client
+          try {
+            await client.destroy();
+            console.log('🗑️ Client destroyed, reinitializing...');
+            setTimeout(() => {
+              client.initialize();
+            }, 5000); // Longer delay before reinit
+          } catch (err) {
+            console.error('❌ Error during auto-restart:', err.message);
+            // Force restart via PM2 if destroy fails
+            console.log('⚠️ Attempting PM2 restart...');
+            process.exit(1); // PM2 will restart the process
+          }
         }
       }
-    }
-  }, 10 * 60 * 1000); // 10 minutes
+    }, 15 * 60 * 1000); // Check every 15 minutes instead of 10
+  }, 2 * 60 * 1000); // Wait 2 minutes before starting health checks
 });
 
 // Authentication failure
