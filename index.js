@@ -5,7 +5,7 @@ const qrcode = require('qrcode-terminal');
 
 // Import services
 const db = require('./src/services/database');
-const scheduler = require('./src/services/scheduler');
+// const scheduler = require('./src/services/scheduler'); // DISABLED - old reminder system
 const { initDailyReminder, executeDailyReminder } = require('./src/services/dailyInternReminder');
 
 // Import utilities
@@ -391,7 +391,7 @@ client.on('message', async (msg) => {
 🤖 From Me: ${msg.fromMe}
 👥 Participants: ${chat.participants.length}
 🔓 Bypass Mode: ${bypassAdminCheck ? 'ON' : 'OFF'}
-⏰ Active Jobs: ${scheduler.getActiveJobsCount()}
+🔓 Bypass Mode: ${bypassAdminCheck ? 'ON' : 'OFF'}
 
 Participant Details:
 ${chat.participants.slice(0, 10).map((p, i) => `${i + 1}. ${p.id._serialized}\n   Admin: ${p.isAdmin}`).join('\n')}

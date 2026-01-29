@@ -90,19 +90,26 @@ async function executeDailyReminder() {
 
   console.log('='.repeat(50));
 }
+let cronJob = null;
 
 /**
  * Initialize the daily reminder cron job
  * Schedule: Every day at 20:00 Asia/Jakarta
  */
 function initDailyReminder() {
+  // Guard: prevent duplicate initialization
+  if (cronJob) {
+    console.log('📅 Daily reminder already initialized, skipping...');
+    return;
+  }
+
   console.log('📅 Initializing daily intern reminder...');
   console.log(`   Schedule: 20:00 Asia/Jakarta`);
   console.log(`   DRY_RUN: ${DRY_RUN}`);
   console.log(`   Target Group: ${REMINDER_GROUP_ID || '(not set)'}`);
 
   // Schedule cron job - 20:00 every day
-  cron.schedule('0 20 * * *', async () => {
+  cronJob = cron.schedule('0 20 * * *', async () => {
     console.log('⏰ Daily reminder triggered by cron');
     await executeDailyReminder();
   }, {
