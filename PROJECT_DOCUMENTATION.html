@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsAppBotReminder - Project Documentation</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #a371f7;
+            --accent-orange: #d29922;
+            --border: #30363d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            color: #fff;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--accent);
+        }
+        
+        h3 {
+            font-size: 1.25rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--accent-green);
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            background: var(--bg-tertiary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--accent-orange);
+        }
+        
+        pre {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border: 1px solid var(--border);
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-primary);
+        }
+        
+        .tree {
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .badge-blue { background: rgba(88, 166, 255, 0.2); color: var(--accent); }
+        .badge-green { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+        .badge-purple { background: rgba(163, 113, 247, 0.2); color: var(--accent-purple); }
+        
+        .overview-table td:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+            width: 150px;
+        }
+        
+        .mermaid-placeholder {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            margin: 1rem 0;
+        }
+        
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        ul, ol {
+            margin: 1rem 0;
+            padding-left: 2rem;
+        }
+        
+        li {
+            margin: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+        
+        strong {
+            color: var(--text-primary);
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 WhatsAppBotReminder - Project Documentation</h1>
+        
+        <h2>📋 Project Overview</h2>
+        <p>WhatsApp Bot dengan fitur <strong>Reminder</strong>, <strong>Templates</strong>, <strong>Games</strong>, <strong>Fun</strong>, <strong>Utility</strong>, dan <strong>Digest</strong> menggunakan library <code>whatsapp-web.js</code> dan database <code>Supabase</code>.</p>
+        
+        <table class="overview-table">
+            <tr><td>Version</td><td><span class="badge badge-blue">2.0.0</span></td></tr>
+            <tr><td>Runtime</td><td>Node.js</td></tr>
+            <tr><td>Database</td><td>Supabase (PostgreSQL)</td></tr>
+            <tr><td>Library</td><td>whatsapp-web.js, node-cron, dayjs</td></tr>
+            <tr><td>Entry Point</td><td><code>index.js</code></td></tr>
+        </table>
+
+        <hr>
+
+        <h2>🏗️ Project Structure</h2>
+        <pre class="tree"><code>WhatsAppBotReminder/
+├── index.js                 # Main entry point (510 lines)
+├── package.json             # Dependencies & scripts
+├── .env                     # Environment variables
+├── .wwebjs_auth/            # WhatsApp session storage
+├── migrations/              # SQL migration scripts
+│   ├── 001_add_new_fields.sql
+│   ├── 002_games_and_digest.sql
+│   └── 003_fun_and_utility.sql
+└── src/
+    ├── commands/            # Command handlers (15 files)
+    │   ├── index.js         # Export all commands
+    │   ├── help.js          # !help
+    │   ├── addReminder.js   # !addreminder
+    │   ├── remindOnce.js    # !remindonce
+    │   ├── listReminders.js # !listreminders
+    │   ├── editReminder.js  # !editreminder
+    │   ├── deleteReminder.js# !deletereminder
+    │   ├── pauseReminder.js # !pausereminder, !resumereminder
+    │   ├── templates.js     # !savetemplate, !usetemplate, !listtemplates
+    │   ├── stats.js         # !stats
+    │   ├── tagAll.js        # !tagall
+    │   ├── games.js         # !tebak, !trivia, !jawab, !spin, !leaderboard
+    │   ├── fun.js           # !gacha, !profile, !birthday
+    │   ├── utility.js       # !splitbill, !rules, !countdown, !note
+    │   └── digest.js        # !mentions, !digest
+    ├── services/            # Core services (3 files)
+    │   ├── database.js      # Supabase operations (42 functions)
+    │   ├── scheduler.js     # Cron job management (7 functions)
+    │   └── gameState.js     # In-memory game state (9 functions)
+    └── utils/               # Utilities (3 files)
+        ├── clientManager.js # WhatsApp client singleton (14 methods)
+        ├── helpers.js       # Date/time utilities (8 functions)
+        └── rateLimiter.js   # Rate limiting class</code></pre>
+
+        <hr>
+
+        <h2>🛠️ Tech Stack & Infrastructure</h2>
+        
+        <h3>Dependencies</h3>
+        <table>
+            <thead>
+                <tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>whatsapp-web.js</code></td><td>github fork</td><td>WhatsApp Web automation</td></tr>
+                <tr><td><code>@supabase/supabase-js</code></td><td>^2.39.0</td><td>Database client</td></tr>
+                <tr><td><code>node-cron</code></td><td>^3.0.3</td><td>Task scheduling</td></tr>
+                <tr><td><code>dayjs</code></td><td>^1.11.10</td><td>Date manipulation</td></tr>
+                <tr><td><code>qrcode-terminal</code></td><td>^0.12.0</td><td>QR code for auth</td></tr>
+                <tr><td><code>dotenv</code></td><td>^16.3.1</td><td>Environment variables</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Database Schema (Supabase)</h3>
+        <div class="section">
+            <p><strong>11 Tables:</strong></p>
+            <ul>
+                <li><code>reminders</code> - Scheduled reminders (recurring & one-time)</li>
+                <li><code>templates</code> - Saved message templates</li>
+                <li><code>leaderboard</code> - Game scores per player</li>
+                <li><code>mentions</code> - Tracked mentions</li>
+                <li><code>chat_activity</code> - Chat activity for digest</li>
+                <li><code>gacha_history</code> - Daily gacha rolls history</li>
+                <li><code>birthdays</code> - Member birthdays</li>
+                <li><code>group_rules</code> - Group rules</li>
+                <li><code>countdowns</code> - Event countdowns</li>
+                <li><code>notes</code> - Group notes</li>
+                <li><code>sessions</code> - Bot session status</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <h2>⚡ Core Services</h2>
+
+        <h3>1. Database Service (database.js)</h3>
+        <p>42 fungsi untuk operasi Supabase:</p>
+        <table>
+            <thead><tr><th>Category</th><th>Functions</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Session</strong></td><td><code>saveSession</code></td></tr>
+                <tr><td><strong>Reminders</strong></td><td><code>getActiveReminders</code>, <code>getChatReminders</code>, <code>getReminderById</code>, <code>createReminder</code>, <code>updateReminder</code>, <code>deleteReminder</code>, <code>isReminderActive</code></td></tr>
+                <tr><td><strong>Templates</strong></td><td><code>saveTemplate</code>, <code>getTemplate</code>, <code>getTemplates</code>, <code>deleteTemplate</code></td></tr>
+                <tr><td><strong>Games</strong></td><td><code>updateLeaderboard</code>, <code>getLeaderboard</code></td></tr>
+                <tr><td><strong>Mentions</strong></td><td><code>saveMention</code>, <code>getUnreadMentions</code>, <code>markMentionsRead</code></td></tr>
+                <tr><td><strong>Digest</strong></td><td><code>trackChatMessage</code>, <code>getChatDigest</code></td></tr>
+                <tr><td><strong>Gacha</strong></td><td><code>checkGachaCooldown</code>, <code>saveGachaResult</code></td></tr>
+                <tr><td><strong>Profile</strong></td><td><code>getUserStats</code>, <code>setBirthday</code>, <code>getTodayBirthdays</code>, <code>getAllBirthdays</code></td></tr>
+                <tr><td><strong>Utility</strong></td><td><code>getGroupRules</code>, <code>setGroupRules</code>, <code>deleteGroupRules</code>, <code>getActiveCountdowns</code>, <code>createCountdown</code>, <code>getNotes</code>, <code>getNote</code>, <code>saveNote</code>, <code>deleteNote</code></td></tr>
+            </tbody>
+        </table>
+
+        <h3>2. Scheduler Service (scheduler.js)</h3>
+        <table>
+            <thead><tr><th>Function</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>scheduleReminder</code></td><td>Schedule recurring reminder dengan cron</td></tr>
+                <tr><td><code>scheduleOneTimeReminder</code></td><td>Schedule one-time reminder dengan setTimeout</td></tr>
+                <tr><td><code>sendReminder</code></td><td>Kirim reminder message ke chat</td></tr>
+                <tr><td><code>stopReminder</code></td><td>Hentikan scheduled reminder</td></tr>
+                <tr><td><code>rescheduleReminder</code></td><td>Update jadwal reminder</td></tr>
+                <tr><td><code>loadAllReminders</code></td><td>Load semua active reminders saat startup</td></tr>
+                <tr><td><code>getActiveJobsCount</code></td><td>Get jumlah active cron jobs</td></tr>
+            </tbody>
+        </table>
+
+        <h3>3. Game State Service (gameState.js)</h3>
+        <table>
+            <thead><tr><th>Function</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>startTebakAngka</code></td><td>Mulai game tebak angka (1-100)</td></tr>
+                <tr><td><code>guessTebakAngka</code></td><td>Process guess dengan hint lebih besar/kecil</td></tr>
+                <tr><td><code>startTrivia</code></td><td>Mulai trivia quiz dari 20 pertanyaan</td></tr>
+                <tr><td><code>answerTrivia</code></td><td>Cek jawaban trivia dengan partial match</td></tr>
+                <tr><td><code>spin</code></td><td>Random picker dari list</td></tr>
+            </tbody>
+        </table>
+
+        <h3>4. Client Manager (clientManager.js)</h3>
+        <p>Singleton class untuk safe WhatsApp client management:</p>
+        <table>
+            <thead><tr><th>Method</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>safeSendMessage</code></td><td>Send message dengan retry logic</td></tr>
+                <tr><td><code>safeReply</code></td><td>Reply dengan retry logic</td></tr>
+                <tr><td><code>safeGetChat</code></td><td>Get chat dengan retry</td></tr>
+                <tr><td><code>healthCheck</code></td><td>Health check pada client</td></tr>
+                <tr><td><code>waitForReady</code></td><td>Wait for client dengan timeout</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>🎮 Feature Summary (28+ Commands)</h2>
+
+        <h3>📌 Reminder Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>!addreminder [hari] [jam] [pesan]</code></td><td>Buat reminder recurring</td></tr>
+                <tr><td><code>!remindonce [tanggal] [jam] [pesan]</code></td><td>Buat one-time reminder</td></tr>
+                <tr><td><code>!listreminders</code></td><td>Lihat semua reminder aktif</td></tr>
+                <tr><td><code>!editreminder [id] [field] [value]</code></td><td>Edit reminder</td></tr>
+                <tr><td><code>!deletereminder [id]</code></td><td>Hapus reminder</td></tr>
+                <tr><td><code>!pausereminder [id]</code></td><td>Pause reminder sementara</td></tr>
+                <tr><td><code>!resumereminder [id]</code></td><td>Resume reminder</td></tr>
+            </tbody>
+        </table>
+
+        <h3>📝 Template Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>!savetemplate [nama] [pesan]</code></td><td>Simpan template pesan</td></tr>
+                <tr><td><code>!usetemplate [nama]</code></td><td>Gunakan template</td></tr>
+                <tr><td><code>!listtemplates</code></td><td>Lihat semua template</td></tr>
+                <tr><td><code>!deletetemplate [nama]</code></td><td>Hapus template</td></tr>
+            </tbody>
+        </table>
+
+        <h3>🎮 Game Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th><th>Points</th></tr></thead>
+            <tbody>
+                <tr><td><code>!tebak</code></td><td>Game tebak angka 1-100</td><td><span class="badge badge-green">+10</span></td></tr>
+                <tr><td><code>!trivia</code></td><td>Quiz dengan 20 pertanyaan</td><td><span class="badge badge-green">+15</span></td></tr>
+                <tr><td><code>!jawab [jawaban]</code></td><td>Jawab trivia</td><td>-</td></tr>
+                <tr><td><code>!spin [a, b, c]</code></td><td>Random picker</td><td>-</td></tr>
+                <tr><td><code>!leaderboard</code></td><td>Lihat ranking game</td><td>-</td></tr>
+            </tbody>
+        </table>
+
+        <h3>🎉 Fun Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>!gacha</code></td><td>Daily gacha roll (Common 60%, Uncommon 25%, Rare 12%, Legendary 3%)</td></tr>
+                <tr><td><code>!profile</code></td><td>Lihat profil & achievement</td></tr>
+                <tr><td><code>!birthday set DD-MM</code></td><td>Set tanggal lahir</td></tr>
+                <tr><td><code>!birthday list</code></td><td>Lihat daftar ulang tahun</td></tr>
+            </tbody>
+        </table>
+
+        <h3>🔧 Utility Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>!splitbill [jumlah]</code></td><td>Bagi tagihan ke member</td></tr>
+                <tr><td><code>!rules</code> / <code>!rules set [isi]</code></td><td>Lihat/set aturan grup</td></tr>
+                <tr><td><code>!countdown [YYYY-MM-DD] [nama]</code></td><td>Countdown ke event</td></tr>
+                <tr><td><code>!note save [nama] [isi]</code></td><td>Simpan catatan</td></tr>
+                <tr><td><code>!note [nama]</code></td><td>Lihat catatan</td></tr>
+            </tbody>
+        </table>
+
+        <h3>📊 Digest Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>!mentions</code></td><td>Lihat mention yang terlewat</td></tr>
+                <tr><td><code>!digest</code></td><td>Summary chat 24 jam terakhir</td></tr>
+            </tbody>
+        </table>
+
+        <h3>📢 Other Commands</h3>
+        <table>
+            <thead><tr><th>Command</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><code>!tagall</code></td><td>Mention semua member grup</td></tr>
+                <tr><td><code>!stats</code></td><td>Statistik reminder</td></tr>
+                <tr><td><code>!help</code></td><td>Daftar semua command</td></tr>
+                <tr><td><code>!debug</code></td><td>Debug info</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>🔒 Security & Reliability Features</h2>
+        <div class="section">
+            <ol>
+                <li><strong>Rate Limiting</strong> - 3 detik cooldown per user</li>
+                <li><strong>Admin Check</strong> - Command hanya untuk admin grup (dapat di-bypass via env)</li>
+                <li><strong>Safe Messaging</strong> - Retry logic untuk handle Puppeteer context errors</li>
+                <li><strong>Health Check</strong> - Auto restart jika client tidak healthy</li>
+                <li><strong>Auto Reconnect</strong> - Reconnect otomatis saat disconnect</li>
+                <li><strong>Row Level Security</strong> - Enabled pada semua tabel Supabase</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>🚀 Running the Bot</h2>
+        <pre><code># Install dependencies
+npm install
+
+# Development mode
+npm run dev
+
+# Production mode
+npm start</code></pre>
+
+        <h3>Environment Variables (.env)</h3>
+        <pre><code>SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+BYPASS_ADMIN_CHECK=true  # Optional: skip admin check</code></pre>
+
+        <hr>
+
+        <h2>📊 Statistics</h2>
+        <table>
+            <thead><tr><th>Metric</th><th>Count</th></tr></thead>
+            <tbody>
+                <tr><td>Total Commands</td><td><span class="badge badge-purple">28+</span></td></tr>
+                <tr><td>Database Tables</td><td><span class="badge badge-blue">11</span></td></tr>
+                <tr><td>Service Functions</td><td><span class="badge badge-green">58+</span></td></tr>
+                <tr><td>Total Lines of Code</td><td>~3,500+</td></tr>
+            </tbody>
+        </table>
+
+        <hr>
+        <p style="text-align: center; color: var(--text-secondary); margin-top: 2rem;">
+            Generated on 2026-01-29 • WhatsAppBotReminder v2.0.0
+        </p>
+    </div>
+</body>
+</html>

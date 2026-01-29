@@ -6,6 +6,7 @@ const qrcode = require('qrcode-terminal');
 // Import services
 const db = require('./src/services/database');
 const scheduler = require('./src/services/scheduler');
+const { initDailyReminder, executeDailyReminder } = require('./src/services/dailyInternReminder');
 
 // Import utilities
 const RateLimiter = require('./src/utils/rateLimiter');
@@ -79,7 +80,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
 let healthCheckInterval = null;
 let healthCheckFailures = 0;
-const MAX_HEALTH_FAILURES = 3; // Auto-restart after 3 consecutive failures
+const MAX_HEALTH_FAILURES = 5; // Auto-restart after 5 consecutive failures
 
 // ================== EVENT HANDLERS ==================
 
@@ -106,7 +107,11 @@ client.on('ready', async () => {
   setTimeout(async () => {
     try {
       await db.saveSession();
-      await scheduler.loadAllReminders(client);
+      // OLD REMINDER SYSTEM - DISABLED
+      // await scheduler.loadAllReminders(client);
+      
+      // NEW: Initialize daily intern reminder
+      initDailyReminder();
     } catch (err) {
       console.error('❌ Error during initialization:', err.message);
     }
@@ -155,7 +160,7 @@ client.on('ready', async () => {
         }
       }
     }
-  }, 5 * 60 * 1000); // 5 minutes
+  }, 10 * 60 * 1000); // 10 minutes
 });
 
 // Authentication failure
@@ -296,41 +301,41 @@ client.on('message', async (msg) => {
         await handleHelp(msg);
         break;
 
-      // Reminder CRUD
-      case '!addreminder':
-        console.log('➕ Executing addreminder...');
-        await handleAddReminder(msg, chat, client);
-        break;
+      // OLD REMINDER COMMANDS - DISABLED
+      // case '!addreminder':
+      //   console.log('➕ Executing addreminder...');
+      //   await handleAddReminder(msg, chat, client);
+      //   break;
 
-      case '!remindonce':
-        console.log('📅 Executing remindonce...');
-        await handleRemindOnce(msg, chat, client);
-        break;
+      // case '!remindonce':
+      //   console.log('📅 Executing remindonce...');
+      //   await handleRemindOnce(msg, chat, client);
+      //   break;
 
-      case '!listreminders':
-        console.log('📋 Executing listreminders...');
-        await handleListReminders(msg, chat);
-        break;
+      // case '!listreminders':
+      //   console.log('📋 Executing listreminders...');
+      //   await handleListReminders(msg, chat);
+      //   break;
 
-      case '!editreminder':
-        console.log('✏️ Executing editreminder...');
-        await handleEditReminder(msg, chat, client);
-        break;
+      // case '!editreminder':
+      //   console.log('✏️ Executing editreminder...');
+      //   await handleEditReminder(msg, chat, client);
+      //   break;
 
-      case '!pausereminder':
-        console.log('⏸️ Executing pausereminder...');
-        await handlePauseReminder(msg, chat);
-        break;
+      // case '!pausereminder':
+      //   console.log('⏸️ Executing pausereminder...');
+      //   await handlePauseReminder(msg, chat);
+      //   break;
 
-      case '!resumereminder':
-        console.log('▶️ Executing resumereminder...');
-        await handleResumeReminder(msg, chat, client);
-        break;
+      // case '!resumereminder':
+      //   console.log('▶️ Executing resumereminder...');
+      //   await handleResumeReminder(msg, chat, client);
+      //   break;
 
-      case '!deletereminder':
-        console.log('🗑️ Executing deletereminder...');
-        await handleDeleteReminder(msg, chat);
-        break;
+      // case '!deletereminder':
+      //   console.log('🗑️ Executing deletereminder...');
+      //   await handleDeleteReminder(msg, chat);
+      //   break;
 
       // Templates
       case '!savetemplate':
@@ -382,6 +387,14 @@ ${chat.participants.length > 10 ? `\n... dan ${chat.participants.length - 10} la
         `.trim();
 
         await msg.reply(debugInfo);
+        break;
+
+      // Test command for daily reminder (admin only)
+      case '!testreminder':
+        console.log('🧪 Executing testreminder...');
+        await msg.reply('🔄 Menjalankan pengecekan laporan harian...');
+        await executeDailyReminder();
+        await msg.reply('✅ Pengecekan selesai. Cek console untuk output.');
         break;
 
       // Games

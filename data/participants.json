@@ -1,0 +1,12 @@
+[
+    {
+        "participant_id": "c01cdf2f-0496-4043-8532-c834afb9c6d0",
+        "name": "Bimsky",
+        "active": true
+    },
+    {
+        "participant_id": "REPLACE_WITH_UUID_2",
+        "name": "Nama Peserta 2",
+        "active": true
+    }
+]

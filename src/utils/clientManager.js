@@ -163,7 +163,10 @@ class ClientManager {
       'Session closed',
       'Navigation',
       'markedUnread',
-      'Cannot read properties of undefined'
+      'Cannot read properties of undefined',
+      'detached Frame',
+      'Frame was detached',
+      'State check timeout'
     ];
     return recoverablePatterns.some(pattern => errorMessage.includes(pattern));
   }
@@ -211,8 +214,19 @@ class ClientManager {
         return { healthy: false, reason: 'No client instance' };
       }
 
-      // Try to get client info
-      const state = await this.client.getState();
+      // First check if client has info (lighter check that doesn't use Puppeteer)
+      if (!this.client.info || !this.client.info.wid) {
+        return { healthy: false, reason: 'Client info not available' };
+      }
+
+      // Try to get client state with timeout protection
+      // This prevents hanging when WhatsApp Web is refreshing
+      const state = await Promise.race([
+        this.client.getState(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('State check timeout')), 5000)
+        )
+      ]);
       
       if (state === 'CONNECTED') {
         return { healthy: true, state };
@@ -220,6 +234,7 @@ class ClientManager {
         return { healthy: false, state, reason: `State is ${state}` };
       }
     } catch (err) {
+      // Don't log every health check failure as error, just as warning
       return { healthy: false, reason: err.message };
     }
   }
