@@ -68,10 +68,18 @@ const client = new Client({
       '--no-first-run',
       '--no-zygote',
       '--single-process',
-      '--disable-gpu'
+      '--disable-gpu',
+      '--disable-extensions',
+      '--aggressive-cache-discard',
+      '--disable-cache',
+      '--disable-application-cache',
+      '--disable-offline-load-stale-cache',
+      '--disk-cache-size=0'
     ]
   },
-  qrMaxRetries: 10
+  qrMaxRetries: 10,
+  authTimeoutMs: 60000,
+  linkPreview: false // Disable link preview to save resources
 });
 
 // Reconnection settings
