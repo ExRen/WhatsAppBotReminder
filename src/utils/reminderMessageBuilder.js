@@ -75,7 +75,52 @@ function formatDateIndonesian(date) {
   return `${dayName}, ${day} ${month} ${year}`;
 }
 
+/**
+ * Build weekly summary message
+ * @param {Object} weeklyData - Data from checkWeeklyReportStatus
+ * @param {string} dateRange - Formatted date range string
+ * @returns {string} Formatted weekly report message
+ */
+function buildWeeklySummaryMessage(weeklyData, dateRange) {
+  let message = `📊 *RINGKASAN MINGGUAN LAPORAN*\n`;
+  message += `📅 Periode: ${dateRange}\n\n`;
+
+  const participants = Object.values(weeklyData);
+  
+  participants.forEach(p => {
+    message += `👤 *${p.name}*\n`;
+    
+    // Day-by-day status
+    const dayStatuses = Object.entries(p.days).map(([date, status]) => {
+      const shortDate = date.split('-').slice(1).reverse().join('/'); // 30/01
+      let icon = '⚪'; // Not present
+      
+      if (status.isForbidden) {
+        icon = '🔒'; // Permission denied
+      } else if (status.isPresent) {
+        icon = status.hasDailyLog ? '🟢' : '🔴';
+      } else if (status.error) {
+        icon = '⚠️';
+      }
+      
+      return `${shortDate}: ${icon}`;
+    });
+
+    message += dayStatuses.join('  ') + '\n\n';
+  });
+
+  message += `Keterangan:\n`;
+  message += `🟢 Hadir & Isi Log\n`;
+  message += `🔴 Hadir tapi Belum Isi\n`;
+  message += `⚪ Tidak Hadir/Libur\n`;
+  message += `🔒 Locked (Token hanya Anda)\n`;
+  message += `⚠️ API Error`;
+
+  return message.trim();
+}
+
 module.exports = {
   buildReminderMessage,
+  buildWeeklySummaryMessage,
   formatDateIndonesian
 };

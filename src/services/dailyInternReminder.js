@@ -2,8 +2,8 @@
 // System-level daily reminder for intern daily report
 
 const cron = require('node-cron');
-const { checkDailyReportStatus } = require('./dailyReportChecker');
-const { buildReminderMessage } = require('../utils/reminderMessageBuilder');
+const { checkDailyReportStatus, checkWeeklyReportStatus } = require('./dailyReportChecker');
+const { buildReminderMessage, buildWeeklySummaryMessage } = require('../utils/reminderMessageBuilder');
 const clientManager = require('../utils/clientManager');
 
 const DRY_RUN = process.env.DRY_RUN === 'true';
@@ -36,13 +36,27 @@ async function executeDailyReminder() {
 
   try {
     // Check daily report status for all participants
-    const { missingNames, presentCount, errors } = await checkDailyReportStatus(date);
+    const { missingNames, participantStatuses, presentCount, errors } = await checkDailyReportStatus(date);
 
     // Build the reminder message
     const message = buildReminderMessage(missingNames, presentCount, date);
 
     if (DRY_RUN) {
       // DRY RUN MODE - Log output without sending
+      console.log('\n[DRY RUN] Detailed Status:');
+      console.log('-'.repeat(60));
+      console.log(`${'Name'.padEnd(25)} | ${'Presence'.padEnd(10)} | ${'Daily Log'.padEnd(10)} | ${'Error'}`);
+      console.log('-'.repeat(60));
+      
+      participantStatuses.forEach(p => {
+        const presence = p.isPresent ? 'PRESENT' : 'ABSENT';
+        let log = p.hasDailyLog ? 'FILLED' : 'MISSING';
+        if (p.isForbidden) log = 'LOCKED 🔒';
+        const error = p.error || '-';
+        console.log(`${p.name.padEnd(25)} | ${presence.padEnd(10)} | ${log.padEnd(10)} | ${error}`);
+      });
+      console.log('-'.repeat(60));
+
       console.log('\n[DRY RUN] Would send message:');
       console.log('-'.repeat(40));
       console.log(message);
@@ -119,7 +133,41 @@ function initDailyReminder() {
   console.log('✅ Daily reminder cron job scheduled');
 }
 
+
+/**
+ * Execute weekly summary check (last 7 days)
+ */
+async function executeWeeklyReport(msg) {
+  const date = getTodayDate();
+  
+  if (msg) await msg.reply('⏳ Menyiapkan ringkasan mingguan (7 hari terakhir)...');
+  
+  console.log(`📊 Generating weekly report ending ${date}`);
+
+  try {
+    const { weeklyData, dateRange } = await checkWeeklyReportStatus(date);
+    const message = buildWeeklySummaryMessage(weeklyData, dateRange);
+
+    if (DRY_RUN) {
+      console.log('\n[DRY RUN] Weekly Message:');
+      console.log(message);
+    } else {
+      if (msg) {
+        await msg.reply(message);
+      } else {
+        // System triggered (placeholder for future use)
+        const chat = await clientManager.safeGetChat(REMINDER_GROUP_ID);
+        if (chat) await clientManager.safeSendMessage(chat, message);
+      }
+    }
+  } catch (err) {
+    console.error('❌ Error in weekly report:', err.message);
+    if (msg) await msg.reply('❌ Terjadi kesalahan saat membuat laporan mingguan.');
+  }
+}
+
 module.exports = {
   initDailyReminder,
-  executeDailyReminder
+  executeDailyReminder,
+  executeWeeklyReport
 };

@@ -5,8 +5,8 @@ const qrcode = require('qrcode-terminal');
 
 // Import services
 const db = require('./src/services/database');
-// const scheduler = require('./src/services/scheduler'); // DISABLED - old reminder system
-const { initDailyReminder, executeDailyReminder } = require('./src/services/dailyInternReminder');
+const scheduler = require('./src/services/scheduler'); 
+// const { initDailyReminder, executeDailyReminder, executeWeeklyReport } = require('./src/services/dailyInternReminder');
 
 // Import utilities
 const RateLimiter = require('./src/utils/rateLimiter');
@@ -57,22 +57,21 @@ const rateLimiter = new RateLimiter(3000);
 // Initialize WhatsApp client
 const client = new Client({
   authStrategy: new LocalAuth({
-    clientId: 'bot-session-v3' // Fresh session for official library
+    clientId: 'bot-session-v5' // Increment for a strictly clean start
   }),
+  webVersionCache: {
+    type: 'local' // Use local cache by default for stability
+  },
   puppeteer: {
-    headless: true,
+    headless: false, // Kembali ke background
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--disable-gpu'
+      '--disable-dev-shm-usage'
     ]
   },
   qrMaxRetries: 10,
-  authTimeoutMs: 60000,
+  authTimeoutMs: 120000, // Increased to 2 minutes
   linkPreview: false // Disable link preview to save resources
 });
 
@@ -105,8 +104,82 @@ client.on('loading_screen', (percent, message) => {
 });
 
 // Authentication successful
+let readyFired = false;
+
 client.on('authenticated', () => {
     console.log('🔐 Authentication successful!');
+    
+    // Fallback: If ready event doesn't fire within 30 seconds, try manual detection
+    setTimeout(async () => {
+      if (!readyFired) {
+        console.log('⚠️ Ready event not fired, attempting manual detection...');
+        try {
+          // Try to get state - if this works, client is likely ready
+          const state = await client.getState();
+          console.log(`📊 Manual state check: ${state}`);
+          
+          if (state === 'CONNECTED') {
+            console.log('✅ Manual ready detection: Client is connected!');
+            readyFired = true;
+            
+            // Mark client as ready in clientManager
+            clientManager.setClient(client);
+            clientManager.setReady(true);
+            
+            // Debug: Capture browser console logs
+            if (client.pupPage) {
+                client.pupPage.on('console', msg => console.log('🌐 BROWSER:', msg.text()));
+            }
+            
+            // Test sending a message with timeout
+            try {
+              const testGroup = process.env.GROUP_ID;
+              if (testGroup) {
+                console.log(`📤 Mengirim pesan tes ke ${testGroup}...`);
+                
+                // Use a promise race to prevent hanging forever
+                const sendPromise = client.sendMessage(testGroup, "🤖 *Bot Online!* (Connection Stabilized)");
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Send Message Timeout')), 15000));
+                
+                await Promise.race([sendPromise, timeoutPromise]);
+                console.log('✅ Pesan tes "Bot Online" terkirim ke grup.');
+              }
+            } catch (sendErr) {
+              console.warn('⚠️ Gagal mengirim pesan tes:', sendErr.message);
+              console.log('💡 Tips: Jika timeout, biasanya karena library belum sinkron sempurna. Tunggu sebentar atau coba !ping.');
+            }
+            
+            // Run initialization
+            setTimeout(async () => {
+                try {
+                    await db.saveSession();
+                    await scheduler.loadAllReminders(client);
+                    console.log('✅ Bot siap digunakan! (manual detection - full init)');
+                } catch (err) {
+                    console.error('❌ Manual init error:', err.message);
+                }
+            }, 2000);
+          }
+        } catch (err) {
+          console.error('❌ Manual detection failed:', err.message);
+        }
+      }
+    }, 30000); // 30 seconds fallback
+});
+
+// Debug: Capture browser console logs
+client.on('ready', async () => {
+    console.log('✅ Bot siap digunakan!');
+    clientManager.setClient(client); 
+    clientManager.setReady(true);
+    readyFired = true; 
+    console.log('📱 Koneksi WhatsApp berhasil');
+
+    try {
+        await scheduler.loadAllReminders(client);
+    } catch (err) {
+        console.error('❌ Scheduler init error:', err.message);
+    }
 });
 
 // Authentication failure
@@ -114,8 +187,19 @@ client.on('auth_failure', (msg) => {
   console.error('❌ Authentication failure:', msg);
 });
 
+// State change (debug)
+client.on('change_state', (state) => {
+  console.log(`🔄 State changed: ${state}`);
+});
+
+// Disconnected
+client.on('disconnected', (reason) => {
+  console.log(`⚠️ Disconnected: ${reason}`);
+});
+
 // Bot ready
 client.on('ready', async () => {
+  readyFired = true; // Prevent fallback from running
   console.log('✅ Bot siap digunakan!');
   console.log('📱 Koneksi WhatsApp berhasil');
   reconnectAttempts = 0; // Reset on successful connection
@@ -252,6 +336,11 @@ client.on('loading_screen', (percent, message) => {
 
 // ================== MESSAGE HANDLER ==================
 
+// Debug: Listen to message_create as well
+client.on('message_create', async (msg) => {
+  console.log(`🔔 message_create: ${msg.body.substring(0, 50)}`);
+});
+
 client.on('message', async (msg) => {
   try {
     // Skip if not a command
@@ -274,10 +363,16 @@ client.on('message', async (msg) => {
 
     const chat = await msg.getChat();
 
-    // Only process commands from group
-    if (!chat.isGroup) {
-      console.log('⚠️ Bukan pesan grup, skip');
-      return;
+    // Log received command
+    console.log(`📨 [${chat.isGroup ? 'Group' : 'Private'}] Command: ${msg.body} from ${msg.from}`);
+
+    const commandParts = msg.body.split(/\s+/);
+    const command = commandParts[0].toLowerCase(); 
+    const args = commandParts.slice(1);
+
+    // Filter: Only allow commands in Group unless it's !ping for testing
+    if (!chat.isGroup && command !== '!ping') {
+        return;
     }
 
     console.log(`👥 Total participants: ${chat.participants.length}`);
@@ -325,8 +420,6 @@ client.on('message', async (msg) => {
 
     // ================== COMMAND ROUTING ==================
 
-    const command = msg.body.split(' ')[0].toLowerCase();
-
     switch (command) {
       // Help
       case '!help':
@@ -334,41 +427,41 @@ client.on('message', async (msg) => {
         await handleHelp(msg);
         break;
 
-      // OLD REMINDER COMMANDS - DISABLED
-      // case '!addreminder':
-      //   console.log('➕ Executing addreminder...');
-      //   await handleAddReminder(msg, chat, client);
-      //   break;
+      // OLD REMINDER COMMANDS
+      case '!addreminder':
+        console.log('➕ Executing addreminder...');
+        await handleAddReminder(msg, chat, client);
+        break;
 
-      // case '!remindonce':
-      //   console.log('📅 Executing remindonce...');
-      //   await handleRemindOnce(msg, chat, client);
-      //   break;
+      case '!remindonce':
+        console.log('📅 Executing remindonce...');
+        await handleRemindOnce(msg, chat, client);
+        break;
 
-      // case '!listreminders':
-      //   console.log('📋 Executing listreminders...');
-      //   await handleListReminders(msg, chat);
-      //   break;
+      case '!listreminders':
+        console.log('📋 Executing listreminders...');
+        await handleListReminders(msg, chat);
+        break;
 
-      // case '!editreminder':
-      //   console.log('✏️ Executing editreminder...');
-      //   await handleEditReminder(msg, chat, client);
-      //   break;
+      case '!editreminder':
+        console.log('✏️ Executing editreminder...');
+        await handleEditReminder(msg, chat, client);
+        break;
 
-      // case '!pausereminder':
-      //   console.log('⏸️ Executing pausereminder...');
-      //   await handlePauseReminder(msg, chat);
-      //   break;
+      case '!pausereminder':
+        console.log('⏸️ Executing pausereminder...');
+        await handlePauseReminder(msg, chat);
+        break;
 
-      // case '!resumereminder':
-      //   console.log('▶️ Executing resumereminder...');
-      //   await handleResumeReminder(msg, chat, client);
-      //   break;
+      case '!resumereminder':
+        console.log('▶️ Executing resumereminder...');
+        await handleResumeReminder(msg, chat, client);
+        break;
 
-      // case '!deletereminder':
-      //   console.log('🗑️ Executing deletereminder...');
-      //   await handleDeleteReminder(msg, chat);
-      //   break;
+      case '!deletereminder':
+        console.log('🗑️ Executing deletereminder...');
+        await handleDeleteReminder(msg, chat);
+        break;
 
       // Templates
       case '!savetemplate':
@@ -422,13 +515,6 @@ ${chat.participants.length > 10 ? `\n... dan ${chat.participants.length - 10} la
         await msg.reply(debugInfo);
         break;
 
-      // Test command for daily reminder (admin only)
-      case '!testreminder':
-        console.log('🧪 Executing testreminder...');
-        await msg.reply('🔄 Menjalankan pengecekan laporan harian...');
-        await executeDailyReminder();
-        await msg.reply('✅ Pengecekan selesai. Cek console untuk output.');
-        break;
 
       // Games
       case '!tebak':

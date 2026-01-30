@@ -13,13 +13,23 @@ async function fetchWithTimeout(url, options = {}) {
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    // Add Authorization header if token exists
+    const token = process.env.INTERN_API_TOKEN;
+    if (token) {
+      // Send as both Bearer and Cookie for maximum compatibility
+      headers['Authorization'] = `Bearer ${token}`;
+      headers['Cookie'] = `accessToken=${token}`;
+    }
+
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
+      headers: headers
     });
     return response;
   } finally {
@@ -44,7 +54,7 @@ async function getAttendance(participantId, date) {
 
     if (!response.ok) {
       console.error(`❌ Attendance API error for ${participantId}: ${response.status}`);
-      return { isPresent: false, error: `HTTP ${response.status}` };
+      return { isPresent: false, error: `HTTP ${response.status}`, status: response.status };
     }
 
     const data = await response.json();
@@ -67,7 +77,7 @@ async function getAttendance(participantId, date) {
       isPresent = data.is_present === true;
     }
 
-    return { isPresent };
+    return { isPresent, status: response.status };
   } catch (err) {
     if (err.name === 'AbortError') {
       console.error(`⏱️ Attendance API timeout for ${participantId}`);
@@ -84,7 +94,7 @@ async function getAttendance(participantId, date) {
  * Note: This API might return all logs for all participants on that date
  * @param {string} participantId - UUID of the participant
  * @param {string} date - Date in YYYY-MM-DD format
- * @returns {Promise<{hasDailyLog: boolean, error?: string}>}
+ * @returns {Promise<{hasDailyLog: boolean, error?: string, status?: number}>}
  */
 async function getDailyLog(participantId, date) {
   try {
@@ -97,10 +107,10 @@ async function getDailyLog(participantId, date) {
     if (!response.ok) {
       // 404 might mean no log found, which is valid
       if (response.status === 404) {
-        return { hasDailyLog: false };
+        return { hasDailyLog: false, status: 200 };
       }
       console.error(`❌ Daily log API error for ${participantId}: ${response.status}`);
-      return { hasDailyLog: false, error: `HTTP ${response.status}` };
+      return { hasDailyLog: false, error: `HTTP ${response.status}`, status: response.status };
     }
 
     const data = await response.json();
@@ -125,7 +135,7 @@ async function getDailyLog(participantId, date) {
       hasDailyLog = true;
     }
 
-    return { hasDailyLog };
+    return { hasDailyLog, status: response.status };
   } catch (err) {
     if (err.name === 'AbortError') {
       console.error(`⏱️ Daily log API timeout for ${participantId}`);

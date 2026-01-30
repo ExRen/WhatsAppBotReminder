@@ -1,12 +1,12 @@
 [
     {
         "participant_id": "c01cdf2f-0496-4043-8532-c834afb9c6d0",
-        "name": "Bimsky",
+        "name": "Bima Aryadinata",
         "active": true
     },
     {
-        "participant_id": "REPLACE_WITH_UUID_2",
-        "name": "Nama Peserta 2",
+        "participant_id": "3d8f5002-0eae-4e12-8620-1627882abc44",
+        "name": "Andika",
         "active": true
     }
 ]
